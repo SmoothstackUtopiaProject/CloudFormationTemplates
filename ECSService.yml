@@ -22,7 +22,7 @@ Parameters:
     Default: 3306
   DBName:
     Type: String
-    Default: Utopia
+    Default: utopia
   ExecutionRoleArn:
     Type: String
     Default: arn:aws:iam::466486113081:role/ECSTaskExecutionRole
