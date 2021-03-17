@@ -23,6 +23,9 @@ Parameters:
   DBName:
     Type: String
     Default: Utopia
+  ExecutionRoleArn:
+    Type: String
+    Default: arn:aws:iam::466486113081:role/ECSTaskExecutionRole
   SubnetID:
     Type: String
     Default: subnet-56ebde1b
@@ -68,7 +71,7 @@ Resources:
       Memory: '4096'
       Cpu: '2048'
       NetworkMode: awsvpc
-      # ExecutionRoleArn: !Sub ${ExecutionRoleArn}
+      ExecutionRoleArn: !Sub ${ExecutionRoleArn}
       TaskRoleArn: !Ref TaskExecutionRole
       ContainerDefinitions:
         - Name: !Ref ApplicationName
