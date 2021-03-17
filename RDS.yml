@@ -7,6 +7,10 @@ Resources:
     Properties:
       DBInstanceClass: "db.t2.micro"
   
+  VPC:
+    Type: "AWS::EC2::VPC"
+    Properties:
+
   Subnet1:
     Type: "AWS::EC2::Subnet"
     Properties:
