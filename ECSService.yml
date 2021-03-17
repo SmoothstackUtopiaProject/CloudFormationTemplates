@@ -35,7 +35,7 @@ Resources:
   AppCluster:
     Type: AWS::ECS::Cluster
     Properties:
-      ClusterName: !Join ['', [ !Ref ApplicationName, ":Cluster" ]]
+      ClusterName: !Join ['', [ !Ref ApplicationName, "-Cluster" ]]
       
 
   # Fargate Service 
