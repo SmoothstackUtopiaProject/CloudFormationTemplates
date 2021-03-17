@@ -6,6 +6,7 @@ Resources:
     Type: "AWS::RDS::DBInstance"
     Properties:
       DBInstanceClass: "db.t2.micro"
+<<<<<<< Updated upstream
   
   Subnet1:
     Type: "AWS::EC2::Subnet"
@@ -25,8 +26,10 @@ Resources:
         Description: 'Secret Subnet ID'
         Name: !Sub 'smoothstack/${ApplicationEnvironment}/subnetIDs-1'
         SecretString: !Sub '{"subnet1":"${Subnet1}","subnet2":"${Subnet2}}'
+=======
+>>>>>>> Stashed changes
 
-# DB  Values
+  # DB  Values
   AppSecret:
     Type: "AWS::SecretsManager::Secret"
     DeletionPolicy: Delete

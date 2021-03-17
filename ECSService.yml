@@ -9,16 +9,18 @@ Parameters:
     Default: dev
   ApplicationName:
     Type: String
-  ECRRepositoryUri:
+  ECRepositoryUri:
     Type: String
     Description: Full URI for docker image to run in container
   DBHost:
     Type: String
-    Default: utopiaairlines-mysql.clufugeeqpsu.us-east-1.rds.amazonaws.com
   DBPort:
     Type: String
-    Default: 3036
   DBName:
+    Type: String
+  SubnetID:
+    Type: String
+  SecurityGroupID:
     Type: String
 
 Resources:
@@ -26,8 +28,7 @@ Resources:
   AppCluster:
     Type: AWS::ECS::Cluster
     Properties:
-      ClusterName: String
-      # Define your cluster's properties
+      ClusterName: !Join ['', [ !Ref ApplicationName, ":Cluster" ]]
       
 
   # Fargate Service 
@@ -45,11 +46,10 @@ Resources:
       NetworkConfiguration:
         AwsvpcConfiguration:
           AssignPublicIp: ENABLED
-          Subnets: # Can be created in the same CFT template and accessed via !Ref
-            - subnetIDA
-            - subnetIDB
-          SecurityGroups: # Can be created in the same CFT template and accessed via !Ref
-            - securityGroup
+          Subnets:
+            - !Ref SubnetID
+          SecurityGroups:
+            - !Ref SecurityGroupID
 
   # Fargate Task Definition
   AppTaskDefinition:
@@ -65,12 +65,7 @@ Resources:
       TaskRoleArn: !Ref TaskExecutionRole
       ContainerDefinitions:
         - Name: !Ref ApplicationName
-          Image: !Ref ECRRepositoryUri 
-          Secrets:
-            - Name: DB_USERNAME
-              ValueFrom: !Ref DBUserName
-            - Name: DB_PASSWORD
-              ValueFrom: !Ref DBUserPassword
+          Image: !Ref ECRepositoryUri
           Environment:
             - Name: APPLICATION_NAME
               Value: !Sub ${ApplicationName}
@@ -126,18 +121,3 @@ Resources:
             Value: !Ref ApplicationName
           - Key: ApplicationEnvironment
             Value: !Ref ApplicationEnvironment
-
-# DB  Values
-  DBUserName:
-    Type: 'AWS::SecretsManager::Secret'
-    Properties:
-      Description: 'Workaround for prodviding a json Secret to fargate'
-      Name: !Sub 'smoothstack/${ApplicationEnvironment}/db-creds-username'
-      SecretString: !Sub '{{resolve:secretsmanager:smoothstack/${ApplicationEnvironment}/database-creds:SecretString:username}}'
-
-  DBUserPassword:
-    Type: 'AWS::SecretsManager::Secret'
-    Properties:
-      Description: 'Workaround for prodviding a json Secret to fargate'
-      Name: !Sub 'smoothstack/${ApplicationEnvironment}/db-creds-password'
-      SecretString: !Sub '{{resolve:secretsmanager:smoothstack/${ApplicationEnvironment}/database-creds:SecretString:password}}'
