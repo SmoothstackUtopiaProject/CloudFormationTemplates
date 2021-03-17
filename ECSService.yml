@@ -9,19 +9,26 @@ Parameters:
     Default: dev
   ApplicationName:
     Type: String
+    Default: UtopiaAirplaneMS
   ECRepositoryUri:
     Type: String
     Description: Full URI for docker image to run in container
+    Default: 466486113081.dkr.ecr.us-east-1.amazonaws.com/utopiaairlines/airplanems:latest
   DBHost:
     Type: String
+    Default: utopiaairlines-mysql.clufugeeqpsu.us-east-1.rds.amazonaws.com
   DBPort:
     Type: String
+    Default: 3306
   DBName:
     Type: String
+    Default: Utopia
   SubnetID:
     Type: String
+    Default: subnet-56ebde1b
   SecurityGroupID:
     Type: String
+    Default: sg-0fefb228a35a0a671
 
 Resources:
 
