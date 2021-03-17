@@ -87,7 +87,7 @@ Resources:
               Value: !Ref ApplicationEnvironment
             - Name: AWS_REGION
               Value: !Ref AWS::Region
-            - Name: DB_URL
+            - Name: DB_URI
               Value: !Join ['',["jdbc:mysql://", !Ref DBHost,":", !Ref DBPort, "/", !Ref DBName ]]
             - Name: DB_USERNAME
               Value: !Ref DBUsername
