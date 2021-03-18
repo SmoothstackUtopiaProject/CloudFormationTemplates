@@ -84,7 +84,7 @@ Resources:
           Image: !Ref ECRepositoryUri
           PortMappings:
             - ContainerPort: 8080
-              HostPort: 80
+              HostPort: 8080
           Environment:
             - Name: APPLICATION_NAME
               Value: !Sub ${ApplicationName}
