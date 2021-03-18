@@ -9,7 +9,7 @@ Parameters:
     Default: dev
   ApplicationName:
     Type: String
-    Default: UtopiaAirplaneMS
+    Default: UtopiaMS
   ECRepositoryUri:
     Type: String
     Description: Full URI for docker image to run in container
