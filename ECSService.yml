@@ -9,24 +9,40 @@ Parameters:
     Default: dev
   ApplicationName:
     Type: String
-  ECRRepositoryUri:
+    Default: UtopiaAirplaneMS
+  ECRepositoryUri:
     Type: String
     Description: Full URI for docker image to run in container
   DBHost:
     Type: String
     Default: utopiaairlines-mysql.clufugeeqpsu.us-east-1.rds.amazonaws.com
+  DBPassword:
+    Type: String
   DBPort:
     Type: String
-    Default: 3036
+    Default: 3306
   DBName:
     Type: String
+    Default: utopia
+  DBUsername:
+    Type: String
+    Default: aws
+  ExecutionRoleArn:
+    Type: String
+    Default: arn:aws:iam::466486113081:role/ECSTaskExecutionRole
+  SubnetID:
+    Type: String
+    Default: subnet-56ebde1b
+  SecurityGroupID:
+    Type: String
+    Default: sg-0fefb228a35a0a671
 
 Resources:
   AppCluster:
     Type: AWS::ECS::Cluster
     Properties:
-      ClusterName: String
       # Define your cluster's properties
+      ClusterName: !Join ["", [!Ref ApplicationName, "-Cluster"]]
 
   # Fargate Service
   AppService:
@@ -42,12 +58,11 @@ Resources:
       LaunchType: FARGATE
       NetworkConfiguration:
         AwsvpcConfiguration:
-          AssignPublicIp: ENABLED
-          Subnets: # Can be created in the same CFT template and accessed via !Ref
-            - subnetIDA
-            - subnetIDB
-          SecurityGroups: # Can be created in the same CFT template and accessed via !Ref
-            - securityGroup
+          AssignPublicIp: DISABLED
+          Subnets:
+            - !Ref SubnetID
+          SecurityGroups:
+            - !Ref SecurityGroupID
       LoadBalancers:
         - LoadBalancerName: UtopiaAirlinesLAB
           TargetGroupArn: arn:aws:elasticloadbalancing:us-east-1:466486113081:targetgroup/ECSAirplaneMSTG/fb05b74561471eb8
@@ -62,19 +77,14 @@ Resources:
       Memory: "4096"
       Cpu: "2048"
       NetworkMode: awsvpc
-      # ExecutionRoleArn: !Sub ${ExecutionRoleArn}
+      ExecutionRoleArn: !Sub ${ExecutionRoleArn}
       TaskRoleArn: !Ref TaskExecutionRole
       ContainerDefinitions:
         - Name: !Ref ApplicationName
-          Image: !Ref ECRRepositoryUri
+          Image: !Ref ECRepositoryUri
           PortMappings:
             - ContainerPort: 8080
               HostPort: 80
-          Secrets:
-            - Name: DB_USERNAME
-              ValueFrom: !Ref DBUserName
-            - Name: DB_PASSWORD
-              ValueFrom: !Ref DBUserPassword
           Environment:
             - Name: APPLICATION_NAME
               Value: !Sub ${ApplicationName}
@@ -95,6 +105,10 @@ Resources:
                     !Ref DBName,
                   ],
                 ]
+            - Name: DB_USERNAME
+              Value: !Ref DBUsername
+            - Name: DB_PASSWORD
+              Value: !Ref DBPassword
           Essential: true
           Memory: 2048
           LogConfiguration:
@@ -119,6 +133,14 @@ Resources:
               - cloudwatch:PutMetricData
             Resource: "*"
             #RDS
+          - Effect: Allow
+            Action:
+              - logs:CreateLogGroup
+              - logs:CreateLogStream
+              - logs:PutLogEvents
+              - logs:DescribeLogStreams
+            Resource:
+              - arn:aws:logs:*:*
       Roles:
         - !Ref TaskExecutionRole
 
@@ -141,18 +163,3 @@ Resources:
           Value: !Ref ApplicationName
         - Key: ApplicationEnvironment
           Value: !Ref ApplicationEnvironment
-
-  # DB  Values
-  DBUserName:
-    Type: "AWS::SecretsManager::Secret"
-    Properties:
-      Description: "Workaround for prodviding a json Secret to fargate"
-      Name: !Sub "smoothstack/${ApplicationEnvironment}/db-creds-username"
-      SecretString: !Sub "{{resolve:secretsmanager:smoothstack/${ApplicationEnvironment}/database-creds:SecretString:username}}"
-
-  DBUserPassword:
-    Type: "AWS::SecretsManager::Secret"
-    Properties:
-      Description: "Workaround for prodviding a json Secret to fargate"
-      Name: !Sub "smoothstack/${ApplicationEnvironment}/db-creds-password"
-      SecretString: !Sub "{{resolve:secretsmanager:smoothstack/${ApplicationEnvironment}/database-creds:SecretString:password}}"
