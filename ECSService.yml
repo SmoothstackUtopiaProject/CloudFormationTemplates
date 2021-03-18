@@ -1,4 +1,4 @@
-AWSTemplateFormatVersion: '2010-09-09'
+AWSTemplateFormatVersion: "2010-09-09"
 Description: Description of your Application/Microservice etc.
 
 # Used to pass parameters from cli to CloudFormation. e.g. You can pass the Environment you are deploying to.
@@ -22,15 +22,13 @@ Parameters:
     Type: String
 
 Resources:
-
   AppCluster:
     Type: AWS::ECS::Cluster
     Properties:
       ClusterName: String
       # Define your cluster's properties
-      
 
-  # Fargate Service 
+  # Fargate Service
   AppService:
     Type: AWS::ECS::Service # Type of AWS Service
     Properties: # Different services have multiple properties.
@@ -50,6 +48,9 @@ Resources:
             - subnetIDB
           SecurityGroups: # Can be created in the same CFT template and accessed via !Ref
             - securityGroup
+      LoadBalancers:
+        - LoadBalancerName: UtopiaAirlinesLAB
+          TargetGroupArn: arn:aws:elasticloadbalancing:us-east-1:466486113081:targetgroup/ECSAirplaneMSTG/fb05b74561471eb8
 
   # Fargate Task Definition
   AppTaskDefinition:
@@ -58,14 +59,17 @@ Resources:
       Family: !Sub ${ApplicationName}-${ApplicationEnvironment}
       RequiresCompatibilities:
         - FARGATE
-      Memory: '4096'
-      Cpu: '2048'
+      Memory: "4096"
+      Cpu: "2048"
       NetworkMode: awsvpc
       # ExecutionRoleArn: !Sub ${ExecutionRoleArn}
       TaskRoleArn: !Ref TaskExecutionRole
       ContainerDefinitions:
         - Name: !Ref ApplicationName
-          Image: !Ref ECRRepositoryUri 
+          Image: !Ref ECRRepositoryUri
+          PortMappings:
+            - ContainerPort: 8080
+              HostPort: 80
           Secrets:
             - Name: DB_USERNAME
               ValueFrom: !Ref DBUserName
@@ -79,7 +83,18 @@ Resources:
             - Name: AWS_REGION
               Value: !Ref AWS::Region
             - Name: DB_URL
-              Value: !Join ['',["jdbc:mysql://", !Ref DBHost,":", !Ref DBPort, "/", !Ref DBName ]]
+              Value:
+                !Join [
+                  "",
+                  [
+                    "jdbc:mysql://",
+                    !Ref DBHost,
+                    ":",
+                    !Ref DBPort,
+                    "/",
+                    !Ref DBName,
+                  ],
+                ]
           Essential: true
           Memory: 2048
           LogConfiguration:
@@ -88,13 +103,13 @@ Resources:
               awslogs-group: !Sub /ecs/smoothstack/${ApplicationName}/${ApplicationEnvironment}
               awslogs-region: !Ref AWS::Region
               awslogs-stream-prefix: ecs
-              awslogs-create-group: 'true'
+              awslogs-create-group: "true"
 
   # Role with permissions that a task needs to do its job e.g. kinesis read, dynamo r/w, cloudwatch metrics
   TaskPolicy:
     Type: AWS::IAM::Policy
     Properties:
-      PolicyName: !Sub 'ECS-TaskPolicy-${ApplicationName}-${ApplicationEnvironment}'
+      PolicyName: !Sub "ECS-TaskPolicy-${ApplicationName}-${ApplicationEnvironment}"
       PolicyDocument:
         Version: 2012-10-17
         Statement:
@@ -102,7 +117,7 @@ Resources:
           - Effect: Allow
             Action:
               - cloudwatch:PutMetricData
-            Resource: '*'
+            Resource: "*"
             #RDS
       Roles:
         - !Ref TaskExecutionRole
@@ -112,32 +127,32 @@ Resources:
     Type: AWS::IAM::Role
     # Description: IAM Role for Task
     Properties:
-      RoleName: !Sub 'ECS-TaskExecutionRole-${ApplicationName}-${ApplicationEnvironment}'
+      RoleName: !Sub "ECS-TaskExecutionRole-${ApplicationName}-${ApplicationEnvironment}"
       AssumeRolePolicyDocument:
         Statement:
-        - Effect: Allow
-          Principal:
-            Service:
-            - ecs-tasks.amazonaws.com
-          Action:
-          - sts:AssumeRole
+          - Effect: Allow
+            Principal:
+              Service:
+                - ecs-tasks.amazonaws.com
+            Action:
+              - sts:AssumeRole
       Tags:
-          - Key: ApplicationName
-            Value: !Ref ApplicationName
-          - Key: ApplicationEnvironment
-            Value: !Ref ApplicationEnvironment
+        - Key: ApplicationName
+          Value: !Ref ApplicationName
+        - Key: ApplicationEnvironment
+          Value: !Ref ApplicationEnvironment
 
-# DB  Values
+  # DB  Values
   DBUserName:
-    Type: 'AWS::SecretsManager::Secret'
+    Type: "AWS::SecretsManager::Secret"
     Properties:
-      Description: 'Workaround for prodviding a json Secret to fargate'
-      Name: !Sub 'smoothstack/${ApplicationEnvironment}/db-creds-username'
-      SecretString: !Sub '{{resolve:secretsmanager:smoothstack/${ApplicationEnvironment}/database-creds:SecretString:username}}'
+      Description: "Workaround for prodviding a json Secret to fargate"
+      Name: !Sub "smoothstack/${ApplicationEnvironment}/db-creds-username"
+      SecretString: !Sub "{{resolve:secretsmanager:smoothstack/${ApplicationEnvironment}/database-creds:SecretString:username}}"
 
   DBUserPassword:
-    Type: 'AWS::SecretsManager::Secret'
+    Type: "AWS::SecretsManager::Secret"
     Properties:
-      Description: 'Workaround for prodviding a json Secret to fargate'
-      Name: !Sub 'smoothstack/${ApplicationEnvironment}/db-creds-password'
-      SecretString: !Sub '{{resolve:secretsmanager:smoothstack/${ApplicationEnvironment}/database-creds:SecretString:password}}'
+      Description: "Workaround for prodviding a json Secret to fargate"
+      Name: !Sub "smoothstack/${ApplicationEnvironment}/db-creds-password"
+      SecretString: !Sub "{{resolve:secretsmanager:smoothstack/${ApplicationEnvironment}/database-creds:SecretString:password}}"
