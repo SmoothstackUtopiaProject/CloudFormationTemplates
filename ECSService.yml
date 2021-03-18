@@ -63,9 +63,9 @@ Resources:
             - !Ref SubnetID
           SecurityGroups:
             - !Ref SecurityGroupID
-      LoadBalancers:
-        - LoadBalancerName: UtopiaAirlinesLAB
-          TargetGroupArn: arn:aws:elasticloadbalancing:us-east-1:466486113081:targetgroup/ECSAirplaneMSTG/fb05b74561471eb8
+      # LoadBalancers:
+      #   - LoadBalancerName: UtopiaAirlinesLAB
+      #     TargetGroupArn: arn:aws:elasticloadbalancing:us-east-1:466486113081:targetgroup/ECSAirplaneMSTG/fb05b74561471eb8
 
   # Fargate Task Definition
   AppTaskDefinition:
