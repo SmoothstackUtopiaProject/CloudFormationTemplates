@@ -1,4 +1,4 @@
-AWSTemplateFormatVersion: "2010-09-09"
+AWSTemplateFormatVersion: '2010-09-09'
 Description: Description of your Application/Microservice etc.
 
 # Used to pass parameters from cli to CloudFormation. e.g. You can pass the Environment you are deploying to.
@@ -38,13 +38,14 @@ Parameters:
     Default: sg-0fefb228a35a0a671
 
 Resources:
+
   AppCluster:
     Type: AWS::ECS::Cluster
     Properties:
-      # Define your cluster's properties
-      ClusterName: !Join ["", [!Ref ApplicationName, "-Cluster"]]
+      ClusterName: !Join ['', [ !Ref ApplicationName, "-Cluster" ]]
+      
 
-  # Fargate Service
+  # Fargate Service 
   AppService:
     Type: AWS::ECS::Service # Type of AWS Service
     Properties: # Different services have multiple properties.
@@ -58,14 +59,11 @@ Resources:
       LaunchType: FARGATE
       NetworkConfiguration:
         AwsvpcConfiguration:
-          AssignPublicIp: DISABLED
+          AssignPublicIp: ENABLED
           Subnets:
             - !Ref SubnetID
           SecurityGroups:
             - !Ref SecurityGroupID
-      # LoadBalancers:
-      #   - LoadBalancerName: UtopiaAirlinesLAB
-      #     TargetGroupArn: arn:aws:elasticloadbalancing:us-east-1:466486113081:targetgroup/ECSAirplaneMSTG/fb05b74561471eb8
 
   # Fargate Task Definition
   AppTaskDefinition:
@@ -74,17 +72,14 @@ Resources:
       Family: !Sub ${ApplicationName}-${ApplicationEnvironment}
       RequiresCompatibilities:
         - FARGATE
-      Memory: "4096"
-      Cpu: "2048"
+      Memory: '4096'
+      Cpu: '2048'
       NetworkMode: awsvpc
       ExecutionRoleArn: !Sub ${ExecutionRoleArn}
       TaskRoleArn: !Ref TaskExecutionRole
       ContainerDefinitions:
         - Name: !Ref ApplicationName
           Image: !Ref ECRepositoryUri
-          # PortMappings:
-          #   - ContainerPort: 8080
-          #     HostPort: 8080
           Environment:
             - Name: APPLICATION_NAME
               Value: !Sub ${ApplicationName}
@@ -93,18 +88,7 @@ Resources:
             - Name: AWS_REGION
               Value: !Ref AWS::Region
             - Name: DB_URL
-              Value:
-                !Join [
-                  "",
-                  [
-                    "jdbc:mysql://",
-                    !Ref DBHost,
-                    ":",
-                    !Ref DBPort,
-                    "/",
-                    !Ref DBName,
-                  ],
-                ]
+              Value: !Join ['',["jdbc:mysql://", !Ref DBHost,":", !Ref DBPort, "/", !Ref DBName ]]
             - Name: DB_USERNAME
               Value: !Ref DBUsername
             - Name: DB_PASSWORD
@@ -117,13 +101,13 @@ Resources:
               awslogs-group: !Sub /ecs/smoothstack/${ApplicationName}/${ApplicationEnvironment}
               awslogs-region: !Ref AWS::Region
               awslogs-stream-prefix: ecs
-              awslogs-create-group: "true"
+              awslogs-create-group: 'true'
 
   # Role with permissions that a task needs to do its job e.g. kinesis read, dynamo r/w, cloudwatch metrics
   TaskPolicy:
     Type: AWS::IAM::Policy
     Properties:
-      PolicyName: !Sub "ECS-TaskPolicy-${ApplicationName}-${ApplicationEnvironment}"
+      PolicyName: !Sub 'ECS-TaskPolicy-${ApplicationName}-${ApplicationEnvironment}'
       PolicyDocument:
         Version: 2012-10-17
         Statement:
@@ -131,16 +115,15 @@ Resources:
           - Effect: Allow
             Action:
               - cloudwatch:PutMetricData
-            Resource: "*"
-            #RDS
+            Resource: '*'
           - Effect: Allow
-            Action:
+            Action: 
               - logs:CreateLogGroup
               - logs:CreateLogStream
               - logs:PutLogEvents
               - logs:DescribeLogStreams
             Resource:
-              - arn:aws:logs:*:*
+              - arn:aws:logs:*:*  
       Roles:
         - !Ref TaskExecutionRole
 
@@ -149,17 +132,17 @@ Resources:
     Type: AWS::IAM::Role
     # Description: IAM Role for Task
     Properties:
-      RoleName: !Sub "ECS-TaskExecutionRole-${ApplicationName}-${ApplicationEnvironment}"
+      RoleName: !Sub 'ECS-TaskExecutionRole-${ApplicationName}-${ApplicationEnvironment}'
       AssumeRolePolicyDocument:
         Statement:
-          - Effect: Allow
-            Principal:
-              Service:
-                - ecs-tasks.amazonaws.com
-            Action:
-              - sts:AssumeRole
+        - Effect: Allow
+          Principal:
+            Service:
+            - ecs-tasks.amazonaws.com
+          Action:
+          - sts:AssumeRole
       Tags:
-        - Key: ApplicationName
-          Value: !Ref ApplicationName
-        - Key: ApplicationEnvironment
-          Value: !Ref ApplicationEnvironment
+          - Key: ApplicationName
+            Value: !Ref ApplicationName
+          - Key: ApplicationEnvironment
+            Value: !Ref ApplicationEnvironment
