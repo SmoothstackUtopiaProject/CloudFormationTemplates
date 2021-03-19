@@ -61,11 +61,6 @@ Resources:
           FromPort: 8080
           ToPort: 8089
           CidrIp: 0.0.0.0/0
-      SecurityGroupEgress:
-        - IpProtocol: tcp
-          FromPort: 80
-          ToPort: 80
-          CidrIp: 0.0.0.0/0
 
   # Fargate Service
   AppService:
