@@ -9,10 +9,7 @@ Parameters:
     Default: dev
   ApplicationName:
     Type: String
-    Default: UtopiaMS
-  ECRepositoryUri:
-    Type: String
-    Description: Full URI for docker image to run in container
+    Default: UtopiaMSNameNotSet
   DBHost:
     Type: String
     Default: utopiaairlines-mysql.clufugeeqpsu.us-east-1.rds.amazonaws.com
@@ -27,19 +24,31 @@ Parameters:
   DBUsername:
     Type: String
     Default: aws
-  TGArn:
+  ECRepositoryUri:
     Type: String
+    Description: Full URI for docker image to run in container
   ExecutionRoleArn:
     Type: String
     Default: arn:aws:iam::466486113081:role/ECSTaskExecutionRole
   SubnetID:
     Type: String
     Default: subnet-56ebde1b
+  TGArn:
+    Type: String
+  VpcId:
+    Type: String
+    Default: vpc-05060d52e0ec4513c
 
 Conditions:
   AirplaneMS: !Equals [!Ref ApplicationName, UtopiaAirplaneMS]
   AirportMS: !Equals [!Ref ApplicationName, UtopiaAirportMS]
+  AuthenticationMS: !Equals [!Ref ApplicationName, UtopiaAuthenticationMS]
+  BookingMS: !Equals [!Ref ApplicationName, UtopiaBookingMS]
   FlightMS: !Equals [!Ref ApplicationName, UtopiaFlightMS]
+  PassengerMS: !Equals [!Ref ApplicationName, UtopiaPassengerMS]
+  PaymentMS: !Equals [!Ref ApplicationName, UtopiaPaymentMS]
+  RouteMS: !Equals [!Ref ApplicationName, UtopiaRouteMS]
+  UserMS: !Equals [!Ref ApplicationName, UtopiaUserMS]
 
 Resources:
   AppCluster:
@@ -50,16 +59,26 @@ Resources:
   ServicesSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupDescription: open ports
-      VpcId: vpc-05060d52e0ec4513c
+      GroupDescription: !Join ["", ["Ports open for: ", !Ref ApplicationName]]
+      GroupName: !Join ["", [!Ref ApplicationName, "-SG"]]
+      VpcId: !Ref VpcId
       SecurityGroupIngress:
         - IpProtocol: tcp
           FromPort: 80
           ToPort: 80
           CidrIp: 0.0.0.0/0
         - IpProtocol: tcp
-          FromPort: 8080
-          ToPort: 8089
+          FromPort:
+            !If [AirplaneMS, 8081,
+            !If [AirportMS, 8082,
+            !If [AuthenticationMS, 8083,
+            !If [BookingMS, 8084,
+            !If [FlightMS, 8085, 
+            !If [PassengerMS, 8086,
+            !If [PaymentMS, 8087,
+            !If [RouteMS, 8088,
+            !If [UserMS, 8089, 
+            80]]]]]]]]]
           CidrIp: 0.0.0.0/0
 
   # Fargate Service
@@ -77,11 +96,16 @@ Resources:
       LoadBalancers:
         - ContainerName: !Join ["-", [!Ref ApplicationName, "Container"]]
           ContainerPort:
-            !If [
-              AirportMS,
-              8080,
-              !If [AirplaneMS, 8081, !If [FlightMS, 8082, 80]],
-            ]
+            !If [AirplaneMS, 8081,
+            !If [AirportMS, 8082,
+            !If [AuthenticationMS, 8083,
+            !If [BookingMS, 8084,
+            !If [FlightMS, 8085, 
+            !If [PassengerMS, 8086,
+            !If [PaymentMS, 8087,
+            !If [RouteMS, 8088,
+            !If [UserMS, 8089, 
+            80]]]]]]]]]
           TargetGroupArn: !Ref TGArn
       NetworkConfiguration:
         AwsvpcConfiguration:
