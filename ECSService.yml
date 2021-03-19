@@ -1,4 +1,4 @@
-AWSTemplateFormatVersion: '2010-09-09'
+AWSTemplateFormatVersion: "2010-09-09"
 Description: Description of your Application/Microservice etc.
 
 # Used to pass parameters from cli to CloudFormation. e.g. You can pass the Environment you are deploying to.
@@ -27,6 +27,8 @@ Parameters:
   DBUsername:
     Type: String
     Default: aws
+  TGArn:
+    Type: String
   ExecutionRoleArn:
     Type: String
     Default: arn:aws:iam::466486113081:role/ECSTaskExecutionRole
@@ -37,15 +39,38 @@ Parameters:
     Type: String
     Default: sg-0fefb228a35a0a671
 
-Resources:
+Conditions:
+  AirplaneMS: !Equals [!Ref ApplicationName, UtopiaAirplaneMS]
+  AirportMS: !Equals [!Ref ApplicationName, UtopiaAirportMS]
+  FlightMS: !Equals [!Ref ApplicationName, UtopiaFlightMS]
 
+Resources:
   AppCluster:
     Type: AWS::ECS::Cluster
     Properties:
-      ClusterName: !Join ['', [ !Ref ApplicationName, "-Cluster" ]]
-      
+      ClusterName: !Join ["", [!Ref ApplicationName, "-Cluster"]]
 
-  # Fargate Service 
+  ServicesSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: open ports
+      VpcId: vpc-0f3c3013387dde44b
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 8080
+          ToPort: 8089
+          CidrIp: 0.0.0.0/0
+      SecurityGroupEgress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+
+  # Fargate Service
   AppService:
     Type: AWS::ECS::Service # Type of AWS Service
     Properties: # Different services have multiple properties.
@@ -57,13 +82,22 @@ Resources:
         MaximumPercent: 200
       DesiredCount: 1
       LaunchType: FARGATE
+      LoadBalancers:
+        - ContainerName: !Join ["-", [!Ref ApplicationName, "Container"]]
+          ContainerPort:
+            !If [
+              AirportMS,
+              8080,
+              !If [AirplaneMS, 8081, !If [FlightMS, 8082, 80]],
+            ]
+          TargetGroupArn: !Ref TGArn
       NetworkConfiguration:
         AwsvpcConfiguration:
-          AssignPublicIp: ENABLED
+          AssignPublicIp: DISABLED
           Subnets:
             - !Ref SubnetID
           SecurityGroups:
-            - !Ref SecurityGroupID
+            - !Ref ServicesSecurityGroup
 
   # Fargate Task Definition
   AppTaskDefinition:
@@ -72,14 +106,22 @@ Resources:
       Family: !Sub ${ApplicationName}-${ApplicationEnvironment}
       RequiresCompatibilities:
         - FARGATE
-      Memory: '4096'
-      Cpu: '2048'
+      Memory: "4096"
+      Cpu: "2048"
       NetworkMode: awsvpc
       ExecutionRoleArn: !Sub ${ExecutionRoleArn}
       TaskRoleArn: !Ref TaskExecutionRole
       ContainerDefinitions:
-        - Name: !Ref ApplicationName
+        - Name: !Join ["-", [!Ref ApplicationName, "Container"]]
           Image: !Ref ECRepositoryUri
+          PortMappings:
+            - ContainerPort:
+                !If [
+                  AirportMS,
+                  8080,
+                  !If [AirplaneMS, 8081, !If [FlightMS, 8082, 80]],
+                ]
+              Protocol: tcp
           Environment:
             - Name: APPLICATION_NAME
               Value: !Sub ${ApplicationName}
@@ -88,7 +130,18 @@ Resources:
             - Name: AWS_REGION
               Value: !Ref AWS::Region
             - Name: DB_URL
-              Value: !Join ['',["jdbc:mysql://", !Ref DBHost,":", !Ref DBPort, "/", !Ref DBName ]]
+              Value:
+                !Join [
+                  "",
+                  [
+                    "jdbc:mysql://",
+                    !Ref DBHost,
+                    ":",
+                    !Ref DBPort,
+                    "/",
+                    !Ref DBName,
+                  ],
+                ]
             - Name: DB_USERNAME
               Value: !Ref DBUsername
             - Name: DB_PASSWORD
@@ -101,13 +154,13 @@ Resources:
               awslogs-group: !Sub /ecs/smoothstack/${ApplicationName}/${ApplicationEnvironment}
               awslogs-region: !Ref AWS::Region
               awslogs-stream-prefix: ecs
-              awslogs-create-group: 'true'
+              awslogs-create-group: "true"
 
   # Role with permissions that a task needs to do its job e.g. kinesis read, dynamo r/w, cloudwatch metrics
   TaskPolicy:
     Type: AWS::IAM::Policy
     Properties:
-      PolicyName: !Sub 'ECS-TaskPolicy-${ApplicationName}-${ApplicationEnvironment}'
+      PolicyName: !Sub "ECS-TaskPolicy-${ApplicationName}-${ApplicationEnvironment}"
       PolicyDocument:
         Version: 2012-10-17
         Statement:
@@ -115,15 +168,15 @@ Resources:
           - Effect: Allow
             Action:
               - cloudwatch:PutMetricData
-            Resource: '*'
+            Resource: "*"
           - Effect: Allow
-            Action: 
+            Action:
               - logs:CreateLogGroup
               - logs:CreateLogStream
               - logs:PutLogEvents
               - logs:DescribeLogStreams
             Resource:
-              - arn:aws:logs:*:*  
+              - arn:aws:logs:*:*
       Roles:
         - !Ref TaskExecutionRole
 
@@ -132,17 +185,17 @@ Resources:
     Type: AWS::IAM::Role
     # Description: IAM Role for Task
     Properties:
-      RoleName: !Sub 'ECS-TaskExecutionRole-${ApplicationName}-${ApplicationEnvironment}'
+      RoleName: !Sub "ECS-TaskExecutionRole-${ApplicationName}-${ApplicationEnvironment}"
       AssumeRolePolicyDocument:
         Statement:
-        - Effect: Allow
-          Principal:
-            Service:
-            - ecs-tasks.amazonaws.com
-          Action:
-          - sts:AssumeRole
+          - Effect: Allow
+            Principal:
+              Service:
+                - ecs-tasks.amazonaws.com
+            Action:
+              - sts:AssumeRole
       Tags:
-          - Key: ApplicationName
-            Value: !Ref ApplicationName
-          - Key: ApplicationEnvironment
-            Value: !Ref ApplicationEnvironment
+        - Key: ApplicationName
+          Value: !Ref ApplicationName
+        - Key: ApplicationEnvironment
+          Value: !Ref ApplicationEnvironment
