@@ -35,9 +35,6 @@ Parameters:
   SubnetID:
     Type: String
     Default: subnet-56ebde1b
-  SecurityGroupID:
-    Type: String
-    Default: sg-0fefb228a35a0a671
 
 Conditions:
   AirplaneMS: !Equals [!Ref ApplicationName, UtopiaAirplaneMS]
