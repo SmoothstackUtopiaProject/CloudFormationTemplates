@@ -38,6 +38,12 @@ Parameters:
   VpcId:
     Type: String
     Default: vpc-05060d52e0ec4513c
+  TuralGmailAddress:
+    Type: String
+  TuralGmailPassword:
+    Type: String
+  TuralJWTSecret:
+    Type: String
 
 Conditions:
   AirplaneMS: !Equals [!Ref ApplicationName, UtopiaAirplaneMS]
@@ -162,22 +168,17 @@ Resources:
             - Name: AWS_REGION
               Value: !Ref AWS::Region
             - Name: DB_URL
-              Value:
-                !Join [
-                  "",
-                  [
-                    "jdbc:mysql://",
-                    !Ref DBHost,
-                    ":",
-                    !Ref DBPort,
-                    "/",
-                    !Ref DBName,
-                  ],
-                ]
+              Value: !Join ["",["jdbc:mysql://",!Ref DBHost,":",!Ref DBPort,"/",!Ref DBName,],]
             - Name: DB_USERNAME
               Value: !Ref DBUsername
             - Name: DB_PASSWORD
               Value: !Ref DBPassword
+            - Name: TURAL_GMAIL_ADDRESS
+              Value: !Ref TuralGmailAddress
+            - Name: TURAL_GMAIL_PASSWORD
+              Value: !Ref TuralGmailPassword
+            - Name: TURAL_JWT_SECRET
+              Value: !Ref TuralJWTSecret
           Essential: true
           Memory: 2048
           LogConfiguration:
