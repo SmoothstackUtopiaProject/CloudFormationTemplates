@@ -35,6 +35,12 @@ Parameters:
   SubnetID:
     Type: String
     Default: subnet-56ebde1b
+  GmailEmail:
+    Type: String
+  GmailPassword:
+    Type: String
+  JWT:
+    Type: String
 
 Conditions:
   AirplaneMS: !Equals [!Ref ApplicationName, UtopiaAirplaneMS]
@@ -138,6 +144,12 @@ Resources:
               Value: !Ref DBUsername
             - Name: DB_PASSWORD
               Value: !Ref DBPassword
+            - Name: EMAIL_ADDRESS
+              Value: !Ref GmailEmail
+            - Name: EMAIL_PASSWORD
+              Value: !Ref GmailPassword
+            - Name: JSON_WEB_TOKEN_SECRET
+              Value: !Ref JWT
           Essential: true
           Memory: 2048
           LogConfiguration:
