@@ -11,14 +11,9 @@ Parameters:
     Default: UtopiaMSNameNotSet
 
   # RDS Connection Values
-  DBHost:
+  DBURL:
     Type: String
   DBPassword:
-    Type: String
-  DBPort:
-    Type: String
-    Default: 3306
-  DBName:
     Type: String
   DBUsername:
     Type: String
@@ -171,7 +166,7 @@ Resources:
             - Name: AWS_REGION
               Value: !Ref AWS::Region
             - Name: DB_URL
-              Value:!Join ["",["jdbc:mysql://",!Ref DBHost,":",!Ref DBPort,"/",!Ref DBName,],]
+              Value: DBURL
             - Name: DB_USERNAME
               Value: !Ref DBUsername
             - Name: DB_PASSWORD
