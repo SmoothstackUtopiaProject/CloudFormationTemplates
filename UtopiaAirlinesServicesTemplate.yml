@@ -67,7 +67,7 @@ Resources:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: !Join ["", ["Ports open for: ", !Ref ApplicationName]]
-      GroupName: !Join ["", [!Ref ApplicationName, "-SG"]]
+      GroupName: !Join ["", ["sg-", !Ref ApplicationName]]
       VpcId: !Ref VpcId
       SecurityGroupIngress:
         - IpProtocol: tcp
