@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: "2010-09-09"
-Description: Description of your Application/Microservice etc.
+Description: Utopia Airlines Demo Project Microservices Template.
 # Used to pass parameters from cli to CloudFormation. e.g. You can pass the Environment you are deploying to.
 # This is useful to implement conditions.
 Parameters:
@@ -36,7 +36,9 @@ Parameters:
 
   # ARN of the TargetGroup pointing to this service's Load Balancer
   # Looks like: "arn:aws:elasticloadbalancing:us-east-1:${AWS_ID}:targetgroup/MyServiceTargetGroup/b410a0a203b09ac6"
-  TargetGroupARN:
+  TargetGroupArnDev:
+    Type: String
+  TargetGroupArnProd:
     Type: String
 
   # ID of the Virtual Private Cloud this Deployment is contained in
@@ -45,6 +47,7 @@ Parameters:
     Type: String
 
 Conditions:
+  ProductionBuild: !Equals [!!Ref ApplicationEnvironment, prod]
   AirplaneMS: !Equals [!Ref ApplicationName, UtopiaAirplaneMS]
   AirportMS: !Equals [!Ref ApplicationName, UtopiaAirportMS]
   AuthenticationMS: !Equals [!Ref ApplicationName, UtopiaAuthenticationMS]
@@ -121,7 +124,7 @@ Resources:
             !If [RouteMS, 8088,
             !If [UserMS, 8089, 
             80]]]]]]]]]
-          TargetGroupArn: !Ref TargetGroupARN
+          TargetGroupArn: !If [ProductionBuild, !Ref TargetGroupArnProd, !!Ref TargetGroupArnDev]
       NetworkConfiguration:
         AwsvpcConfiguration:
           AssignPublicIp: DISABLED
