@@ -48,15 +48,15 @@ Parameters:
 
 Conditions:
   ProductionBuild: !Equals [!Ref ApplicationEnvironment, prod]
-  AirplaneMS: !Equals [!Ref ApplicationName, utopiaairplanems]
-  AirportMS: !Equals [!Ref ApplicationName, utopiaairportms]
-  AuthenticationMS: !Equals [!Ref ApplicationName, utopiaauthenticationms]
-  BookingMS: !Equals [!Ref ApplicationName, utopiabookingms]
-  FlightMS: !Equals [!Ref ApplicationName, utopiaflightms]
-  PassengerMS: !Equals [!Ref ApplicationName, utopiapassengerms]
-  PaymentMS: !Equals [!Ref ApplicationName, utopiapaymentms]
-  RouteMS: !Equals [!Ref ApplicationName, utopiaroutems]
-  UserMS: !Equals [!Ref ApplicationName, utopiauserms]
+  AirplaneMS: !Equals [!Ref ApplicationName, UtopiaAirplaneMS]
+  AirportMS: !Equals [!Ref ApplicationName, UtopiaAirportMS]
+  AuthenticationMS: !Equals [!Ref ApplicationName, UtopiaAuthenticationMS]
+  BookingMS: !Equals [!Ref ApplicationName, UtopiaBookingMS]
+  FlightMS: !Equals [!Ref ApplicationName, UtopiaFlightMS]
+  PassengerMS: !Equals [!Ref ApplicationName, UtopiaPassengerMS]
+  PaymentMS: !Equals [!Ref ApplicationName, UtopiaPaymentMS]
+  RouteMS: !Equals [!Ref ApplicationName, UtopiaRouteMS]
+  UserMS: !Equals [!Ref ApplicationName, UtopiaUserMS]
 
 Resources:
   AppCluster:
