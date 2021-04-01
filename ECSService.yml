@@ -11,7 +11,7 @@ Parameters:
     Default: UtopiaMSNameNotSet
 
   # RDS Connection Values
-  DBURL:
+  DBUrl:
     Type: String
   DBPassword:
     Type: String
@@ -166,7 +166,7 @@ Resources:
             - Name: AWS_REGION
               Value: !Ref AWS::Region
             - Name: DB_URL
-              Value: DBURL
+              Value: DBUrl
             - Name: DB_USERNAME
               Value: !Ref DBUsername
             - Name: DB_PASSWORD
