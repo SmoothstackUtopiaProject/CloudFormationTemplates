@@ -170,7 +170,7 @@ Resources:
             - Name: AWS_REGION
               Value: !Ref AWS::Region
             - Name: DB_URL
-              Value: DBUrl
+              Value: !Ref DBUrl
             - Name: DB_USERNAME
               Value: !Ref DBUsername
             - Name: DB_PASSWORD
