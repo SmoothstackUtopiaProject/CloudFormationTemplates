@@ -125,7 +125,7 @@ Resources:
             !If [RouteMS, 8088,
             !If [UserMS, 8089, 
             80]]]]]]]]]
-          TargetGroupArn: !If [ProductionBuild, !Ref TargetGroupArnProd, !Ref TargetGroupArnDev]
+          TargetGroupArn: arn:aws:elasticloadbalancing:us-east-1:466486113081:targetgroup/UtopiaPassengersMSTargetGroup/57ff331618cf41ae
       NetworkConfiguration:
         AwsvpcConfiguration:
           AssignPublicIp: DISABLED
