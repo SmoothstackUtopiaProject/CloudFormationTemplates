@@ -1,6 +1,6 @@
 aws cloudformation deploy \
 --stack-name $APPLICATION_NAME \
---template-file ./DeploymentTemplate.yml \
+--template-file ./CloudDeploymentTemplate.yml \
 --parameter-overrides \
 ApplicationName=$APPLICATION_NAME \
 ECRepositoryUri=$AWS_ID/$APPLICATION_REPOSITORY:$COMMIT_HASH \
