@@ -62,12 +62,13 @@ Resources:
   AppCluster:
     Type: AWS::ECS::Cluster
     Properties:
-      ClusterName: !Join ["", [!Ref ApplicationName, "-Cluster"]]
+      ClusterName: !Join ["-", [!Ref ApplicationName, "Cluster"]]
+  
   ServicesSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: !Join ["", ["Ports open for: ", !Ref ApplicationName]]
-      GroupName: !Join ["", [!Ref ApplicationName, "-SG"]]
+      GroupName: !Join ["-", [!Ref ApplicationName, "SG"]]
       VpcId: !Ref VpcId
       SecurityGroupIngress:
         - IpProtocol: tcp
@@ -101,10 +102,10 @@ Resources:
 
   # Fargate Service
   AppService:
-    Type: AWS::ECS::Service # Type of AWS Service
-    Properties: # Different services have multiple properties.
+    Type: AWS::ECS::Service
+    Properties:
       ServiceName: !Ref ApplicationName
-      Cluster: !Ref AppCluster # Can be created in this same CFT template
+      Cluster: !Ref AppCluster
       TaskDefinition: !Ref AppTaskDefinition
       DeploymentConfiguration:
         MinimumHealthyPercent: 100
