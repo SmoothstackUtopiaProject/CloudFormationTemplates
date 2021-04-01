@@ -47,7 +47,7 @@ Parameters:
     Type: String
 
 Conditions:
-  ProductionBuild: !Equals [!!Ref ApplicationEnvironment, prod]
+  ProductionBuild: !Equals [!Ref ApplicationEnvironment, prod]
   AirplaneMS: !Equals [!Ref ApplicationName, UtopiaAirplaneMS]
   AirportMS: !Equals [!Ref ApplicationName, UtopiaAirportMS]
   AuthenticationMS: !Equals [!Ref ApplicationName, UtopiaAuthenticationMS]
@@ -124,7 +124,7 @@ Resources:
             !If [RouteMS, 8088,
             !If [UserMS, 8089, 
             80]]]]]]]]]
-          TargetGroupArn: !If [ProductionBuild, !Ref TargetGroupArnProd, !!Ref TargetGroupArnDev]
+          TargetGroupArn: !If [ProductionBuild, !Ref TargetGroupArnProd, !Ref TargetGroupArnDev]
       NetworkConfiguration:
         AwsvpcConfiguration:
           AssignPublicIp: DISABLED
