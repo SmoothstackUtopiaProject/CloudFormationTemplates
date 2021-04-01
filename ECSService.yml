@@ -9,9 +9,10 @@ Parameters:
   ApplicationName:
     Type: String
     Default: UtopiaMSNameNotSet
+
+  # RDS Connection Values
   DBHost:
     Type: String
-    Default: utopiaairlines-mysql.clufugeeqpsu.us-east-1.rds.amazonaws.com
   DBPassword:
     Type: String
   DBPort:
@@ -19,24 +20,35 @@ Parameters:
     Default: 3306
   DBName:
     Type: String
-    Default: utopia
   DBUsername:
     Type: String
-    Default: aws
+
+  # URI of Elastic Container Repository containing the latest Build Image
+  # Looks like: ${AWS_ID}/MyRepositoryProjectFolder/MyServive:${COMMIT_HASH}
   ECRepositoryUri:
     Type: String
-    Description: Full URI for docker image to run in container
+    Description: Full URI of Docker Image to run in container
+
+  # ARN of the Service's Execution Role (requires all read/write permissions of service needed)
+  # Looks like: "arn:aws:iam::${AWS_ID}:role/MyTaskExecutionRole"
   ExecutionRoleArn:
     Type: String
-    Default: arn:aws:iam::466486113081:role/ECSTaskExecutionRole
+  
+  # ID of the Subnet within the VPC to deploy to (should be private)
+  # Looks like: "subnet-56ebde1b"
   SubnetID:
     Type: String
-    Default: subnet-56ebde1b
-  TGArn:
+
+  # ARN of the TargetGroup pointing to this service's Load Balancer
+  # Looks like: "arn:aws:elasticloadbalancing:us-east-1:${AWS_ID}:targetgroup/MyServiceTargetGroup/b410a0a203b09ac6"
+  TargetGroupARN:
     Type: String
+
+  # ID of the Virtual Private Cloud this Deployment is contained in
+  # Looks like: "vpc-05060d52e0ec4513c"
   VpcId:
     Type: String
-    Default: vpc-05060d52e0ec4513c
+
 Conditions:
   AirplaneMS: !Equals [!Ref ApplicationName, UtopiaAirplaneMS]
   AirportMS: !Equals [!Ref ApplicationName, UtopiaAirportMS]
@@ -47,6 +59,7 @@ Conditions:
   PaymentMS: !Equals [!Ref ApplicationName, UtopiaPaymentMS]
   RouteMS: !Equals [!Ref ApplicationName, UtopiaRouteMS]
   UserMS: !Equals [!Ref ApplicationName, UtopiaUserMS]
+
 Resources:
   AppCluster:
     Type: AWS::ECS::Cluster
@@ -87,6 +100,7 @@ Resources:
             !If [UserMS, 8089, 
             80]]]]]]]]]
           CidrIp: 0.0.0.0/0
+
   # Fargate Service
   AppService:
     Type: AWS::ECS::Service # Type of AWS Service
@@ -112,7 +126,7 @@ Resources:
             !If [RouteMS, 8088,
             !If [UserMS, 8089, 
             80]]]]]]]]]
-          TargetGroupArn: !Ref TGArn
+          TargetGroupArn: !Ref TargetGroupARN
       NetworkConfiguration:
         AwsvpcConfiguration:
           AssignPublicIp: DISABLED
@@ -120,6 +134,7 @@ Resources:
             - !Ref SubnetID
           SecurityGroups:
             - !Ref ServicesSecurityGroup
+
   # Fargate Task Definition
   AppTaskDefinition:
     Type: AWS::ECS::TaskDefinition
@@ -156,18 +171,7 @@ Resources:
             - Name: AWS_REGION
               Value: !Ref AWS::Region
             - Name: DB_URL
-              Value:
-                !Join [
-                  "",
-                  [
-                    "jdbc:mysql://",
-                    !Ref DBHost,
-                    ":",
-                    !Ref DBPort,
-                    "/",
-                    !Ref DBName,
-                  ],
-                ]
+              Value:!Join ["",["jdbc:mysql://",!Ref DBHost,":",!Ref DBPort,"/",!Ref DBName,],]
             - Name: DB_USERNAME
               Value: !Ref DBUsername
             - Name: DB_PASSWORD
@@ -181,6 +185,7 @@ Resources:
               awslogs-region: !Ref AWS::Region
               awslogs-stream-prefix: ecs
               awslogs-create-group: "true"
+
   # Role with permissions that a task needs to do its job e.g. kinesis read, dynamo r/w, cloudwatch metrics
   TaskPolicy:
     Type: AWS::IAM::Policy
@@ -204,10 +209,10 @@ Resources:
               - arn:aws:logs:*:*
       Roles:
         - !Ref TaskExecutionRole
+        
   #IAM for application container (task)
   TaskExecutionRole:
     Type: AWS::IAM::Role
-    # Description: IAM Role for Task
     Properties:
       RoleName: !Sub "ECS-TaskExecutionRole-${ApplicationName}-${ApplicationEnvironment}"
       AssumeRolePolicyDocument:
