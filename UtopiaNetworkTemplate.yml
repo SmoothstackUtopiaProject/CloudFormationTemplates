@@ -1,0 +1,126 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Utopia Airlines Demo Project Network Template.
+
+Parameters:
+  # Naming & Description
+  NetworkDescription:
+    Type: String
+    Default: Network for the Utopia Airlines demo Project.
+  NetworkName:
+    Type: String
+    Default: UtopiaAirlines
+  ProjectName:
+    Type: String
+    Default: UtopiaAirlines
+
+  #Availability
+  AvailabilityRegion:
+    Type: String
+    Default: us-east
+  AvailabilityZone:
+    Type: String
+    Default: 1a
+
+
+Resources:
+
+  # (Development Branch)
+  #===================================================
+  # Network Load Balancer
+  DevLoadBalancer:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties: 
+      Name: !Join ["-", ["NLB-Dev", !Ref NetworkName]]
+      Scheme: internal
+      Subnets: 
+        - !Ref DevSubnet
+      Tags:
+        - Key: Project
+          Value: !Ref ProjectName
+      Type: network
+
+  # Private Subnet
+  DevSubnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: !Join ["-", [!Ref AvailabilityRegion, !Ref AvailabilityZone]]
+      CidrBlock: 10.0.10.0/24
+      Tags:
+        - Key: Project
+          Value: !Ref ProjectName
+      VpcId: !Ref VPC
+
+  # Security Group
+  DevSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties: 
+      GroupDescription: Exposes VPC Endpoint HTTP ports
+      GroupName: !Join ["-", ["SecurityGroup-Dev", !Ref NetworkName]]
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+      SecurityGroupEgress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: Project
+          Value: !Ref ProjectName
+      VpcId: !Ref VPC
+
+  #===================================================
+
+  # (Production Branch)
+  #===================================================
+  # # Private Subnet
+  # ProdSubnet:
+  #   Type: AWS::EC2::Subnet
+  #   Properties:
+  #     AvailabilityZone: !Join ["-", [!Ref AvailabilityRegion, !Ref AvailabilityZone]]
+  #     CidrBlock: 10.0.20.0/24
+  #     Tags:
+  #       - Key: Project
+  #         Value: !Ref ProjectName
+  #     VpcId: !Ref VPC
+
+  # # Security Group
+  # ProdSecurityGroup:
+  #   Type: AWS::EC2::SecurityGroup
+  #   Properties: 
+  #     GroupDescription: Exposes VPC Endpoint HTTP ports
+  #     GroupName: !Join ["-", ["SecurityGroup-Prod", !Ref NetworkName]]
+  #     SecurityGroupIngress:
+  #       - IpProtocol: tcp
+  #         FromPort: 80
+  #         ToPort: 80
+  #         CidrIp: 0.0.0.0/0
+  #       - IpProtocol: tcp
+  #         FromPort: 22
+  #         ToPort: 22
+  #         CidrIp: 0.0.0.0/0
+  #     SecurityGroupEgress:
+  #       - IpProtocol: tcp
+  #         FromPort: 80
+  #         ToPort: 80
+  #         CidrIp: 0.0.0.0/0
+  #     Tags:
+  #       - Key: Project
+  #         Value: !Ref ProjectName
+  #     VpcId: !Ref VPC
+  #===================================================
+
+  # VPC
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.0.0.0/16
+      Tags:
+        - Key: Project
+          Value: !Ref ProjectName

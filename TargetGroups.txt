@@ -1,0 +1,27 @@
+  # Target Group
+  EC2TargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+      Properties: 
+        Name: !Join ["-", ["EC2-TargetGroup", !Ref ApplicationName, !Ref ApplicationEnvironment]]
+        Port: !If [AirplaneMS, 8081,
+              !If [AirportMS, 8082,
+              !If [AuthenticationMS, 8083,
+              !If [BookingMS, 8084,
+              !If [FlightMS, 8085, 
+              !If [PassengerMS, 8086,
+              !If [PaymentMS, 8087,
+              !If [RouteMS, 8088,
+              !If [UserMS, 8089, 
+              80]]]]]]]]]
+        Protocol: HTTP
+        Targets:
+          - AvailabilityZone: String
+            Id: String
+            Port: Integer
+        Tags:
+          - Key: project
+            Value: !Ref ProjectName
+          - Key: name
+            Value: !Join ["-", ["EC2-TargetGroup", !Ref ApplicationName, !Ref ApplicationEnvironment]]
+        TargetType: instance
+        VpcId: !Ref VpcId
